@@ -195,6 +195,26 @@ func TestFilterPeersByIPDiversity(t *testing.T) {
 		require.Equal(t, peers, filtered)
 	})
 
+	t.Run("Shared nonpublic addresses do not hide diverse public peers", func(t *testing.T) {
+		peers := []*peer.AddrInfo{
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "172.17.0.1"}, addr{addr: "1.1.1.1"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "172.17.0.1"}, addr{addr: "2.2.2.2"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "172.17.0.1"}, addr{addr: "3.3.3.3"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "172.17.0.1"}, addr{addr: "4.4.4.4"}),
+		}
+		require.Equal(t, peers, filterPeersByIPDiversity(peers, maxIPsPerGroup))
+	})
+
+	t.Run("Public IP group limit remains with shared nonpublic addresses", func(t *testing.T) {
+		peers := []*peer.AddrInfo{
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "1.1.1.1"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "1.1.2.2"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "1.1.3.3"}),
+			createPeer(addr{addr: "127.0.0.1"}, addr{addr: "4.4.4.4"}),
+		}
+		require.Equal(t, peers[3:], filterPeersByIPDiversity(peers, maxIPsPerGroup))
+	})
+
 	t.Run("Same IPv4 block, but acceptable diversity", func(t *testing.T) {
 		peers := []*peer.AddrInfo{
 			createPeer(addr{ipv6: false, addr: "1.1.1.1"}),

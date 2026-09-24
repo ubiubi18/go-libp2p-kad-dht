@@ -122,6 +122,11 @@ func filterPeersByIPDiversity(newPeers []*peer.AddrInfo, limit int) []*peer.Addr
 	for _, p := range newPeers {
 		// Find all IP groups this peer belongs to
 		for _, addr := range p.Addrs {
+			// Nonpublic addresses cannot be used by the WAN DHT and must not
+			// make otherwise diverse public peers appear to share an IP group.
+			if !manet.IsPublicAddr(addr) {
+				continue
+			}
 			ip, err := manet.ToIP(addr)
 			if err != nil {
 				continue
